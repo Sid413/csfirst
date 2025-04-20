@@ -1,0 +1,26 @@
+# Dockerfile for Streamlit Web Summarizer (no X11 required)
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install system dependencies for spaCy
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements and install Python dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Download NLTK data and spaCy model at build time
+RUN python -m nltk.downloader punkt stopwords
+RUN python -m spacy download en_core_web_sm
+
+# Copy the web app code
+COPY web_summarizer.py .
+
+EXPOSE 8501
+
+# Start Streamlit web app
+CMD ["streamlit", "run", "web_summarizer.py", "--server.port=8501", "--server.address=0.0.0.0"]
